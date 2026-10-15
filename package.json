@@ -1,0 +1,42 @@
+{
+  "name": "bootstrap-server",
+  "version": "0.1.0",
+  "description": "Standalone libp2p bootstrap server with blessed TUI — peer discovery and circuit relay for the P2P Trust Stack.",
+  "private": true,
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "start": "P2PTS_LOG_LEVEL=info node --experimental-strip-types --loader ./test-loader.mjs index.ts",
+    "dev": "P2PTS_LOG_LEVEL=info node --experimental-strip-types --loader ./test-loader.mjs --watch index.ts",
+    "test-bootstrap": "node --experimental-strip-types --loader ./test-loader.mjs ./scripts/test-bootstrap-connect.ts",
+    "gen-seed": "node --experimental-strip-types --loader ./test-loader.mjs ./scripts/generate-bootstrap-seed.ts",
+    "init-bootstrap": "node --experimental-strip-types --loader ./test-loader.mjs ./scripts/init-bootstrap-env.ts",
+    "init:bootstrap": "node --experimental-strip-types --loader ./test-loader.mjs ./scripts/init-bootstrap-env.ts"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@chainsafe/libp2p-noise": "^17.0.0",
+    "@chainsafe/libp2p-yamux": "^8.0.1",
+    "@libp2p/bootstrap": "^12.0.25",
+    "@libp2p/circuit-relay-v2": "^4.2.8",
+    "@libp2p/crypto": "^5.1.21",
+    "@libp2p/identify": "^4.1.8",
+    "@libp2p/interface": "^3.2.4",
+    "@libp2p/kad-dht": "^16.3.4",
+    "@libp2p/peer-id": "^6.0.11",
+    "@libp2p/tcp": "^11.0.22",
+    "@libp2p/utils": "^7.2.3",
+    "@libp2p/websockets": "^10.1.16",
+    "@multiformats/multiaddr": "^13.0.3",
+    "@p2p-trust-stack/core": "^0.1.0",
+    "blessed": "^0.1.81",
+    "libp2p": "^3.3.4"
+  },
+  "devDependencies": {
+    "@types/blessed": "^0.1.27",
+    "@types/node": "^22.13.0",
+    "@types/ws": "^8.5.12",
+    "typescript": "^6.0.3",
+    "ws": "^8.18.0"
+  }
+}
