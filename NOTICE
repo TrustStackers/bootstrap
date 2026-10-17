@@ -1,0 +1,69 @@
+bootstrap — P2P Trust Stack bootstrap / relay server
+Copyright (C) 2026 Trust Stackers
+
+Dual licensing
+--------------
+This product is dual-licensed. You may use, copy, modify, and distribute it
+under the terms of the GNU Affero General Public License, version 3 only
+(AGPL-3.0-only), a copy of which is included in the LICENSE file. No "or any
+later version" option is granted.
+
+Alternatively, a separate commercial license is available from Trust Stackers
+for use cases where AGPL-3.0 obligations (copyleft, source disclosure, and the
+network-interaction requirement of section 13) are not acceptable. See
+COMMERCIAL-LICENSE.md, or contact licensing@truststackers.com.
+
+License reference
+-----------------
+"LicenseRef-TrustStackers-Commercial" is a local SPDX license reference defined
+by this Project. It denotes the commercial license terms in
+COMMERCIAL-LICENSE.md, granted under a separate Order Form.
+
+Copyright and attribution notices
+---------------------------------
+Under AGPL-3.0 section 7(b), the copyright and attribution notices in this
+project (including this NOTICE and the notices in the source files) must be
+preserved in redistributions.
+
+Network interaction
+-------------------
+Under AGPL-3.0 section 13, if you modify this software and let users interact
+with it over a network, you must offer those users the Corresponding Source of
+your modified version.
+
+Operating a bootstrap node for the public network is explicitly welcome under
+the AGPL branch. See the README for operator guidance.
+
+No trademark grant
+------------------
+Nothing in this project grants any right to use the "Trust Stackers" name,
+logo, or the "P2P Trust Stack" mark. As an additional term under AGPL-3.0
+section 7(e), the licensors decline to grant rights under trademark law for
+these trade names, trademarks, and service marks. Trademark use requires a
+separate written agreement. See TRADEMARK.md.
+
+Third-party notices
+-------------------
+This product includes software developed by third parties under permissive
+licenses. SPDX identifiers:
+
+- blessed — MIT
+- ws — MIT
+- libp2p, @libp2p/bootstrap, @libp2p/circuit-relay-v2, @libp2p/identify,
+  @libp2p/kad-dht, @libp2p/tcp, @libp2p/websockets, @libp2p/peer-id,
+  @libp2p/crypto, @libp2p/utils, @libp2p/interface, @libp2p/ping,
+  @chainsafe/libp2p-noise, @chainsafe/libp2p-yamux,
+  @multiformats/multiaddr, multiformats
+  — Apache-2.0 OR MIT
+- @p2p-trust-stack/core — first party; licensed under this repository's dual
+  license (see LICENSE and COMMERCIAL-LICENSE.md)
+
+Apache-2.0 components:
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use these files except in compliance with the License.
+  You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
+
+All third-party components are permissively licensed and compatible with
+AGPL-3.0. No copyleft-licensed third-party code may be added to this project
+(see CONTRIBUTING.md, "Dependency policy").

@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-TrustStackers-Commercial
+// Copyright (C) 2026 Trust Stackers
+
 /**
  * generate-bootstrap-seed — generate a random 32-byte Ed25519 seed, its
  * 24-word BIP-39 word sequence, and the resulting libp2p peer ID.

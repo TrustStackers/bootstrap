@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+
+// SPDX-License-Identifier: AGPL-3.0-only OR LicenseRef-TrustStackers-Commercial
+// Copyright (C) 2026 Trust Stackers
+
 /**
  * Bootstrap Server Connectivity Tester
  *

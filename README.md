@@ -119,3 +119,23 @@ bootstrap/
 - **`scripts/init-bootstrap-env.ts`** — Writes the `.env` from a word sequence
 - **`scripts/test-bootstrap-connect.ts`** — Connectivity test script
 - **`scripts/generate-bootstrap-seed.ts`** — Prints a word sequence + seed + peer ID
+
+## License
+
+**Dual-licensed:**
+
+- **AGPL-3.0-only** — see [`LICENSE`](./LICENSE); or
+- a **commercial license** where AGPL-3.0 obligations (copyleft, source
+  disclosure, and the section 13 network-interaction requirement) are not
+  acceptable — see [`COMMERCIAL-LICENSE.md`](./COMMERCIAL-LICENSE.md).
+
+[`NOTICE`](./NOTICE) declares the `LicenseRef-TrustStackers-Commercial`
+reference and lists third-party attribution.
+
+**Running a bootstrap or relay node for the public network is free and welcome**
+under the AGPL branch. If you modify the software and let users interact with it
+over a network, AGPL-3.0 section 13 requires you to offer them your source.
+
+[`TRADEMARK.md`](./TRADEMARK.md) covers the marks ("Trust Stackers", "P2P Trust
+Stack"), which no license grants. All contributions require the
+[CLA](./CLA.md) — see [CONTRIBUTING.md](./CONTRIBUTING.md).

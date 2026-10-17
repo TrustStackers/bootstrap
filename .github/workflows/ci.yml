@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Supersede an in-flight run when a branch is pushed again.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: typecheck + license gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x' # >=22.5.0: the stack uses the built-in node:sqlite
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: License headers (SPDX)
+        run: node scripts/add-spdx-headers.mjs --check --license='AGPL-3.0-only OR LicenseRef-TrustStackers-Commercial' .
+
+      # No copyleft runtime dependencies. This repository is itself AGPL, but the
+      # COMMERCIAL branch still has to be licensable: a third-party copyleft
+      # dependency would make that impossible. Policy: CONTRIBUTING.md.
+      - name: Dependency licenses
+        run: node scripts/check-dependency-licenses.mjs .
+
+      - name: Typecheck
+        run: npm run typecheck
