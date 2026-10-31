@@ -24,8 +24,8 @@ a fixed public IP:
 # Generate a fresh identity and write ./.env
 npm run init-bootstrap -- --host mediator.example.com --generate
 
-# …or reuse a word sequence kept in a file (never lands in shell history)
-npm run init-bootstrap -- --words-file ./bootstrap-phrase.txt --host 203.0.113.5
+# …or reuse the word sequence kept OUTSIDE the repo (never lands in shell history)
+npm run init-bootstrap -- --words-file ~/data/phrase.txt --host 203.0.113.5
 
 npm start
 ```
@@ -34,6 +34,25 @@ The peer ID is **deterministic** (derived from the seed), so clients can dial th
 server without a prior identify exchange. There are **no hardcoded addresses and
 no OS environment-variable overrides** — the `.env` is the single source of truth.
 A missing/malformed `.env` prints an actionable message and exits(1).
+
+### ⚠️ The word sequence is this server's private key
+
+`--generate` mints a **new relay identity**: it creates a fresh 32-byte seed,
+derives the peer ID from it, and prints the 24-word BIP-39 phrase **once**. That
+phrase *is* the private key — anyone holding it can derive the peer ID and
+impersonate this server. So:
+
+- **Store it outside the repo** (e.g. `~/data/phrase.txt`) and pass it with
+  `--words-file`. Never keep it in the working tree.
+- **Never commit it.** `phrase.txt`, `bootstrap-phrase.txt` and `*.phrase.txt` are
+  gitignored here as a safety net, but outside-the-repo is the recommendation.
+- **Reuse the same phrase** across restarts so the peer ID stays stable — a new
+  identity invalidates every client's `.env`.
+- It is the ONLY way to reproduce the peer ID; there is no recovery path.
+
+Clients (the utility server and the agent app) need the **peer ID and address
+only**, never the seed. Their `init:bootstrap` writes a client `.env` with no
+`BOOTSTRAP_SEED_HEX` and refuses to boot if one is present.
 
 ## Options
 

@@ -156,6 +156,34 @@ function upsertEnvKeys(existing: string, updates: Record<string, string>): strin
 }
 
 /**
+ * Append the logging block to a `.env` that has none.
+ *
+ * Logging is a different concern from the bootstrap identity, so this is added
+ * ONCE, with the keys left EMPTY (the built-in default is `warn`), and never
+ * rewritten afterwards — the operator toggles it in place. `upsertEnvKeys` leaves
+ * unknown keys alone, so a value set here survives every later run.
+ *
+ * It exists because verbosity used to live in the component's `package.json` script
+ * (`P2PTS_LOG_LEVEL=info node …`) — POSIX-only syntax that PowerShell and cmd cannot
+ * parse. A fresh `.env` should therefore already say where the setting belongs.
+ */
+function withLoggingBlock(text: string): string {
+  if (/^\s*P2PTS_LOG_LEVEL\s*=/m.test(text)) return text;
+
+  const lines = text.split('\n');
+  while (lines.length > 0 && lines[lines.length - 1].trim() === '') lines.pop();
+  if (lines.length > 0) lines.push('');
+  lines.push(
+    '# ── Logging (optional) ──',
+    '# silent | error | warn | info | debug      (default: warn)',
+    'P2PTS_LOG_LEVEL=',
+    '# 1 turns on the [CEREMONY] OOBI→RFI→RFA trace lines (independent of the level).',
+    'CEREMONY_TRACE=',
+  );
+  return `${lines.join('\n')}\n`;
+}
+
+/**
  * True when `git` reports the path as ignored (so it can never be committed).
  *
  * This standalone repo may not be `git init`-ed yet, in which case
@@ -275,7 +303,8 @@ async function main(): Promise<void> {
   console.log('');
 
   const existing = existsSync(target) ? readFileSync(target, 'utf8') : '';
-  const next = upsertEnvKeys(existing, updates);
+  // SERVER shape: the seed IS written here (this is the one component whose peer ID comes from it).
+  const next = withLoggingBlock(upsertEnvKeys(existing, updates));
   if (args.dryRun) {
     console.log(`[dry-run] would write ${target}:`);
     console.log(next.split('\n').map((l) => `    ${l}`).join('\n'));

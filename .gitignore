@@ -25,3 +25,10 @@ data/
 # Logs
 *.log
 npm-debug.log*
+
+# ── Bootstrap/relay word sequence (a PRIVATE KEY) ──
+# The recommended location is OUTSIDE the repo (e.g. ~/data/phrase.txt). These
+# entries are only a safety net so a stray copy can never be committed.
+phrase.txt
+bootstrap-phrase.txt
+*.phrase.txt
