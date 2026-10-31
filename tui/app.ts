@@ -18,7 +18,7 @@
  *
  * The server's IDENTITY (the seed the peer ID is derived from) and ADDRESS
  * (host, ports, relay) come from a gitignored `.env` file, loaded through
- * `@p2p-trust-stack/core/config/bootstrap-env.js`. That file is created by `npm run init-bootstrap`
+ * `@p2p-trust-stack/core/config/bootstrap-env`. That file is created by `npm run init:bootstrap`
  * from a developer-supplied 24-word BIP-39 word sequence.
  *
  * There are deliberately NO hardcoded addresses and NO OS environment-variable
@@ -39,6 +39,7 @@ import {
   verifyBootstrapEnv,
   BOOTSTRAP_ENV_FILENAME,
 } from '@p2p-trust-stack/core/config/bootstrap-env.js';
+import { applyLoggingEnv } from '@p2p-trust-stack/core/config/logging-env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -46,7 +47,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * Resolved server configuration.
  *
  * The IDENTITY (seedHex → peer ID) and ADDRESS (host, ports, relay) come from
- * the component's `.env` file via `@p2p-trust-stack/core/config/bootstrap-env.js` — there is no
+ * the component's `.env` file via `@p2p-trust-stack/core/config/bootstrap-env` — there is no
  * hardcoded address and no OS environment-variable override. Only operational
  * knobs (bind host, DB path, relay grant) remain as CLI flags.
  */
@@ -107,6 +108,11 @@ async function resolveConfig(): Promise<ServerConfig> {
   const envPath = args.envPath ?? join(__dirname, '..', BOOTSTRAP_ENV_FILENAME);
   const env = loadBootstrapEnv({ path: envPath });
 
+  // Verbosity comes from the same `.env` as the identity and address — no
+  // `P2PTS_LOG_LEVEL=info` prefix in the npm script, which Windows cannot parse.
+  // Applied here (not in main()) so it takes effect before the first stack line.
+  applyLoggingEnv({ path: envPath });
+
   // Fail loudly on a hand-edited/corrupt env: the peer ID clients dial must
   // match the seed this server derives its key from.
   await verifyBootstrapEnv(env);
@@ -149,7 +155,7 @@ gitignored .env file, created with:
   npm run init:bootstrap -- --host <dns-or-ip> [--generate | --words-file <path>]
 
 Options (operational overrides only — no address/identity flags):
-  --env <path>          Path to the .env file (default: ./.env)
+  --env <path>          Path to the .env file (default: bootstrap/.env)
   --host <addr>         Bind address (default: 0.0.0.0)
   --db <path>           SQLite database path (default: ./data/bootstrapdb.db)
   --enable-dht          Enable Kademlia DHT for peer discovery

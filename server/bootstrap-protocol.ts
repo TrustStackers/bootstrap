@@ -66,8 +66,19 @@ interface RegisterMessage {
   /**
    * Network/group (namespace) the peer belongs to, e.g. 'p2pts'. The utility
    * server sends its own namespace; an agent sends the VTN it is joining.
+   *
+   * For BOTH roles this is the VTN **machine key** — the value an agent matches
+   * on to find the utility server that serves the network it wants.
    */
   net?: string;
+  /**
+   * UTILITY SERVER ONLY (ignored for agents): the display name of the VTN this
+   * server serves, e.g. 'Trust Stackers'. Optional, and deliberately its own
+   * field: `net` is the machine key ('p2pts') that matching depends on, while
+   * this is only a label — keeping them apart is what stops a VTN's display name
+   * from being confused with, or colliding against, an agent's user name.
+   */
+  vtnName?: string;
   /**
    * The peer's USER name (bootstrap-facing). This is deliberately NOT the name
    * registered with the utility server — it is the locally-configured user name
@@ -109,6 +120,12 @@ interface BootstrapResponse {
     /** The peer's user name (bootstrap-facing), resolvable as vta:<net>:<agentName>. */
     agentName?: string;
     /**
+     * UTILITY SERVER ONLY: the display name of the VTN this server serves
+     * (e.g. 'Trust Stackers'). `net` carries its machine key ('p2pts'), which is
+     * what an agent matches on; this is the human label beside it.
+     */
+    vtnName?: string;
+    /**
      * True when the peer currently holds a circuit-relay reservation on this
      * relay — the authoritative "reachable via relay" signal, distinct from a
      * direct `reachable`.
@@ -133,6 +150,19 @@ const MAX_MESSAGE_BYTES = 65536; // 64 KiB — bootstrap messages are small
  * Override with the `TEST_PEER_TTL_SECONDS` environment variable.
  */
 const TEST_PEER_TTL_SECONDS = Number(process.env.TEST_PEER_TTL_SECONDS ?? '') || 300;
+
+/**
+ * Open-stream count on a SINGLE connection at which the keepalive handler warns.
+ *
+ * libp2p's per-protocol `maxInboundStreams` default is 32, and a codec that
+ * reaches it resets every subsequent stream. This handler deliberately swallows
+ * its own errors (a dropped keepalive stream is normal), so the wedge this file
+ * exists to prevent is INVISIBLE on the server: the log stays clean while every
+ * probe is being reset. Warn well before the limit so a climbing count — the
+ * leak that used to wedge the codec for the life of the process — is visible in
+ * the log BEFORE it becomes a flap.
+ */
+const KEEPALIVE_STREAM_WARN_THRESHOLD = 16;
 
 /**
  * Handle an incoming keepalive stream on /bootstrap/keepalive/1.0.0.
@@ -176,6 +206,18 @@ export async function handleKeepaliveStream(
 ): Promise<void> {
   const lp = lpStream(stream, { maxDataLength: 1024 });
   const peerId = connection.remotePeer.toString();
+
+  // Stream-pressure telemetry — see KEEPALIVE_STREAM_WARN_THRESHOLD. Reported on
+  // ENTRY, because the interesting case is a count that keeps climbing across
+  // probes, and this is the only place the connection object is in hand.
+  const openStreams = (connection as unknown as { streams?: unknown[] }).streams?.length ?? 0;
+  if (openStreams >= KEEPALIVE_STREAM_WARN_THRESHOLD) {
+    api.emitError(
+      `Keepalive stream pressure on ${peerId.slice(0, 12)}...: ${openStreams} open streams on this ` +
+      'connection. libp2p resets this protocol once the count exceeds maxInboundStreams (32 by ' +
+      'default) and then every keepalive probe fails until the connection is re-established.',
+    );
+  }
 
   try {
     while (true) {
@@ -290,8 +332,16 @@ async function buildRegisterResponse(
   // derived here so it is available from first contact.
   const net = msg.net?.trim() || '';
   const agentName = msg.agentName?.trim() || '';
+  const vtnName = msg.vtnName?.trim() || '';
+  // A UTILITY SERVER is NOT an agent name, and its identity is the VTN key in
+  // `net` — so `vta:<net>:<agentName>` is never derived for it. Deriving one
+  // would mint `vta:p2pts:utility-server`, which is indistinguishable from a real
+  // agent named 'utility-server' and would let a display name masquerade as a
+  // resolvable agent URI.
+  const isUtilityServer = msg.peerType === 'utility_server';
   const nameUri =
-    msg.nameUri?.trim() || (net && agentName ? `vta:${net}:${agentName}` : undefined);
+    msg.nameUri?.trim() ||
+    (net && agentName && !isUtilityServer ? `vta:${net}:${agentName}` : undefined);
   const isTest = msg.test === true;
   const expiresAt = isTest
     ? Math.floor(Date.now() / 1000) + TEST_PEER_TTL_SECONDS
@@ -301,6 +351,7 @@ async function buildRegisterResponse(
     peerType: msg.peerType,
     net: net || undefined,
     agentName: agentName || undefined,
+    vtnName: vtnName || undefined,
     nameUri,
     isTest,
     expiresAt,
@@ -308,6 +359,11 @@ async function buildRegisterResponse(
 
   if (msg.peerType) {
     api.emitInfo(`Peer type set: ${peerId.slice(0, 12)}... → ${msg.peerType}`);
+  }
+  if (vtnName) {
+    api.emitInfo(
+      `VTN name: ${peerId.slice(0, 12)}... → ${vtnName}${net ? ` (${net})` : ''}`,
+    );
   }
   if (nameUri) {
     api.emitInfo(`Peer name: ${peerId.slice(0, 12)}... → ${nameUri}`);
@@ -410,6 +466,7 @@ function buildResponse(requestPeerId: string, api: BootstrapAPI, clientSourceAdd
       did: p.did ?? undefined,
       net: p.net ?? undefined,
       agentName: p.agentName ?? undefined,
+      vtnName: p.vtnName ?? undefined,
       reachableViaRelay: p.relayReserved,
       reachableScope: p.reachableScope,
     }));

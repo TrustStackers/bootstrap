@@ -22,7 +22,14 @@
  *   - agent_name (TEXT) — the peer's USER name (bootstrap-facing; NOT the
  *       name registered with the utility server). Resolvable as
  *       vta:<net>:<agent_name>.
- *   - name_uri (TEXT) — derived vta:<net>:<agent_name> when both parts known
+ *   - vtn_name (TEXT) — UTILITY SERVER ONLY: the human-readable name of the VTN
+ *       this server serves (e.g. 'Trust Stackers'), while `net` carries its
+ *       machine key (e.g. 'p2pts'). Kept in its own column so a VTN's display
+ *       name can never be mistaken for — or collide with — an agent's user name.
+ *   - name_uri (TEXT) — derived vta:<net>:<agent_name> when both parts known.
+ *       Deliberately NOT derived for a utility server: `vta:p2pts:utility-server`
+ *       is indistinguishable from an agent named 'utility-server', and a server
+ *       is not an agent name. Its identity is the VTN key in `net`.
  *   - is_test (INTEGER) — 1 = a test-suite peer, TTL-pruned via expires_at
  *   - expires_at (INTEGER) — unix epoch after which a test peer is pruned
  *   - reachable_scope (TEXT) — 'wan'|'dns'|'relay'|'lan'|'loopback'|'unknown'
@@ -76,6 +83,12 @@ export interface PeerRecord {
   net: string | null;
   /** The peer's user name (bootstrap-facing; not the utility-registered name). */
   agentName: string | null;
+  /**
+   * UTILITY SERVER ONLY: the human-readable name of the VTN it serves
+   * (e.g. 'Trust Stackers'). `net` holds the machine key ('p2pts') that agents
+   * match on; this is display-only and null for every agent.
+   */
+  vtnName: string | null;
   /** Derived vta:<net>:<agent_name> URI when both parts are known. */
   nameUri: string | null;
   /** True for test-suite peers, which are TTL-pruned. */
@@ -115,6 +128,11 @@ export interface PeerDesignation {
   net?: string;
   /** The peer's USER name (bootstrap-facing; not the utility-registered name). */
   agentName?: string;
+  /**
+   * UTILITY SERVER ONLY: the display name of the VTN this server serves
+   * (e.g. 'Trust Stackers'). Agents ignore it; `net` is what they match on.
+   */
+  vtnName?: string;
   /** Explicit vta:<net>:<name> URI; else derived from net + agentName. */
   nameUri?: string;
   /** True for a test-suite peer (TTL-pruned). */
@@ -245,6 +263,7 @@ interface PeerRow {
   real_did: string | null;
   net: string | null;
   agent_name: string | null;
+  vtn_name: string | null;
   name_uri: string | null;
   is_test: number;
   expires_at: number | null;
@@ -280,6 +299,7 @@ function rowToPeer(row: PeerRow): PeerRecord {
     did: row.real_did,
     net: row.net,
     agentName: row.agent_name,
+    vtnName: row.vtn_name,
     nameUri: row.name_uri,
     isTest: row.is_test === 1,
     expiresAt: row.expires_at ?? null,
@@ -356,6 +376,7 @@ export class PeerDb {
         vid               TEXT,
         net               TEXT,
         agent_name        TEXT,
+        vtn_name          TEXT,
         name_uri          TEXT,
         is_test           INTEGER NOT NULL DEFAULT 0,
         expires_at        INTEGER,
@@ -389,6 +410,19 @@ export class PeerDb {
         UNIQUE(peer_a, peer_b)
       )
     `);
+
+    // Columns added after the first release. `CREATE TABLE IF NOT EXISTS` above
+    // is a no-op on an existing database, so a new column has to be applied
+    // separately or every read of it fails with "no such column".
+    this.addColumnIfMissing('peers', 'vtn_name', 'TEXT');
+  }
+
+  /** Add a column when the table exists and does not already have it. */
+  private addColumnIfMissing(table: string, column: string, type: string): void {
+    const cols = this.db.prepare(`PRAGMA table_info(${table})`).all() as unknown as Array<{ name: string }>;
+    if (cols.length === 0) return; // table not created yet — nothing to alter
+    if (cols.some((c) => c.name === column)) return;
+    this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
   }
 
   // ---------------------------------------------------------------------------
@@ -503,6 +537,7 @@ export class PeerDb {
     if (d.peerType !== undefined) { sets.push('peer_type = ?'); vals.push(d.peerType); }
     if (d.net !== undefined) { sets.push('net = ?'); vals.push(d.net); }
     if (d.agentName !== undefined) { sets.push('agent_name = ?'); vals.push(d.agentName); }
+    if (d.vtnName !== undefined) { sets.push('vtn_name = ?'); vals.push(d.vtnName); }
     if (d.nameUri !== undefined) { sets.push('name_uri = ?'); vals.push(d.nameUri); }
     if (d.isTest !== undefined) { sets.push('is_test = ?'); vals.push(d.isTest ? 1 : 0); }
     if (d.expiresAt !== undefined) { sets.push('expires_at = ?'); vals.push(d.expiresAt); }

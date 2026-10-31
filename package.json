@@ -34,7 +34,7 @@
     "@libp2p/utils": "^7.2.3",
     "@libp2p/websockets": "^10.1.16",
     "@multiformats/multiaddr": "^13.0.3",
-    "@p2p-trust-stack/core": "^0.1.0",
+    "@p2p-trust-stack/core": "0.2.0",
     "blessed": "^0.1.81",
     "libp2p": "^3.3.4"
   },

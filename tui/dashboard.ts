@@ -73,14 +73,27 @@ function peerStateIcon(state: string): string {
 }
 
 /**
- * Best human label for a peer: its configured user name, namespaced when known.
- * Falls back to the vta:<net>:<name> URI, then to the bare namespace, then to
- * nothing (PeerID only). Exported for unit testing.
+ * Best human label for a peer.
+ *
+ * A UTILITY SERVER is identified by the VTN it serves, not by its own node name:
+ * its `agentName` is the process name ('utility-server'), which says nothing
+ * about which network it hosts, while `net` is the VTN **key** ('p2pts') that
+ * agents match on to find the server for the VTN they want — so the row reads
+ * `Utl Server (p2pts)`. The VTN's human-readable name (`vtnName`) is deliberately
+ * NOT used as the identifier: it is a label, not a key, and two networks can
+ * share one.
+ *
+ * An AGENT keeps its configured user name, namespaced when known. Falls back to
+ * the vta:<net>:<name> URI, then to the bare namespace, then to nothing (PeerID
+ * only). Exported for unit testing.
  */
 export function peerLabel(peer: PeerRecord): string {
+  if (peer.peerType === 'utility_server') {
+    return peer.net ? `Utl Server (${peer.net})` : 'Utl Server';
+  }
   if (peer.agentName) return peer.net ? `${peer.agentName} (${peer.net})` : peer.agentName;
   if (peer.nameUri) return peer.nameUri;
-  // A peer that has announced only its network/group (e.g. a utility server that
+  // A peer that has announced only its network/group (e.g. a peer that
   // registered a namespace before a name was known) still deserves a label:
   // show the group rather than a bare peer ID.
   if (peer.net) return peer.net;
