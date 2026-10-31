@@ -491,7 +491,7 @@ function buildResponse(requestPeerId: string, api: BootstrapAPI, clientSourceAdd
  * Compute the relay address prefix from server info.
  * Returns the portion that identifies the relay itself, ready to have a
  * destination peer ID appended after /p2p-circuit, e.g.:
- *   /dns/mediator.fpndtg.com/tcp/4001/p2p/{serverPeerId}/p2p-circuit
+ *   /dns/relay.truststackers.com/tcp/4001/p2p/{serverPeerId}/p2p-circuit
  *   /ip4/1.2.3.4/tcp/4001/p2p/{serverPeerId}/p2p-circuit
  *
  * Bug fix: info.relayAddr previously had /p2p-circuit and /p2p/{serverPeerId}

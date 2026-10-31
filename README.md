@@ -5,15 +5,24 @@ Standalone libp2p bootstrap server with a blessed TUI dashboard. Provides peer d
 ## Quick Start
 
 ```bash
-cd bootstrap
+# 1. Install
 npm install
-npm run init-bootstrap -- --host <dns-or-ip> --generate   # once: writes ./.env
+
+# 2. Mint this server's identity and write ./.env (once). This PRINTS the 24-word
+#    phrase — store it OUTSIDE the repo; it is this server's private key.
+npm run init-bootstrap -- --host relay.truststackers.com --generate
+
+# 3. Run
 npm start
 ```
 
 `init-bootstrap` derives the server's peer ID from a 24-word BIP-39 word
-sequence (generated, or supplied with `--words-file`) and writes a **gitignored
-`.env`**. Every component reads that file through `@p2p-trust-stack/core/config/bootstrap-env.js`.
+sequence (generated with `--generate`, or supplied with `--words-file`) and writes
+a **gitignored `.env`**. Every component reads that file through
+`@p2p-trust-stack/core/config/bootstrap-env.js`. Read
+[the private-key note](#the-word-sequence-is-this-servers-private-key) below
+before generating an identity — and remember that clients need the **peer ID**,
+never the phrase.
 
 ## Production Usage
 
