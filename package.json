@@ -6,8 +6,8 @@
   "type": "module",
   "main": "index.ts",
   "scripts": {
-    "start": "P2PTS_LOG_LEVEL=info node --experimental-strip-types --loader ./test-loader.mjs index.ts",
-    "dev": "P2PTS_LOG_LEVEL=info node --experimental-strip-types --loader ./test-loader.mjs --watch index.ts",
+    "start": "node --experimental-strip-types --loader ./test-loader.mjs index.ts",
+    "dev": "node --experimental-strip-types --loader ./test-loader.mjs --watch index.ts",
     "test-bootstrap": "node --experimental-strip-types --loader ./test-loader.mjs ./scripts/test-bootstrap-connect.ts",
     "gen-seed": "node --experimental-strip-types --loader ./test-loader.mjs ./scripts/generate-bootstrap-seed.ts",
     "init-bootstrap": "node --experimental-strip-types --loader ./test-loader.mjs ./scripts/init-bootstrap-env.ts",
